@@ -1,2 +1,6 @@
 .vscode
 *.asv
+*.obj
+*.exp
+*.lib
+*.mexw64
