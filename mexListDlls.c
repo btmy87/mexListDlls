@@ -57,4 +57,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
     plhs[0] = out;
   }
+  free(lphModule);
+  free(pFilename);
 }
