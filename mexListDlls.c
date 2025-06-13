@@ -13,9 +13,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
   {
     mexErrMsgIdAndTxt("mexListDlls:nrhs", "Zero inputs required.");
   }
-  if (nlhs != 0)
+  if (nlhs > 1)
   {
-    mexErrMsgIdAndTxt("mexListDlls:nlhs", "Zero outputs required.");
+    mexErrMsgIdAndTxt("mexListDlls:nlhs", "<=1 outputs required.");
   }
 
   HANDLE hProcess = GetCurrentProcess();
@@ -34,11 +34,27 @@ void mexFunction(int nlhs, mxArray *plhs[],
   char *pFilename;
   pFilename = calloc(MAX_PATH + 1, sizeof(char));
 
-  for (int i = 0; i < countModules; i++)
+  if (nlhs == 0)
   {
-    memset(pFilename, 0, MAX_PATH + 1);
-    GetModuleFileNameA(lphModule[i], pFilename, MAX_PATH + 1);
-    mexPrintf(pFilename);
-    mexPrintf("\n");
+    // if no arguments, then we'll print out to the screen
+    for (int i = 0; i < countModules; i++)
+    {
+      memset(pFilename, 0, MAX_PATH + 1);
+      GetModuleFileNameA(lphModule[i], pFilename, MAX_PATH + 1);
+      mexPrintf(pFilename);
+      mexPrintf("\n");
+    }
+  }
+  else
+  {
+    // if there's one output argument, we'll send a cell array with the names
+    mxArray *out = mxCreateCellMatrix(countModules, 1);
+    for (int i = 0; i < countModules; i++)
+    {
+      memset(pFilename, 0, MAX_PATH + 1);
+      GetModuleFileNameA(lphModule[i], pFilename, MAX_PATH + 1);
+      mxSetCell(out, i, mxCreateString(pFilename));
+    }
+    plhs[0] = out;
   }
 }
