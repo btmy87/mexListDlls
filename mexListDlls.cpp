@@ -29,12 +29,12 @@ public:
 
     DWORD countModules = lpcbNeeded / sizeof(HMODULE);
     WCHAR *pFilename;
-    SIZE_T nbytesFilename = (MAX_PATH + 1) * sizeof(WCHAR);
+    DWORD nbytesFilename = (MAX_PATH + 1) * sizeof(WCHAR);
     pFilename = (WCHAR *)calloc(MAX_PATH + 1, sizeof(WCHAR));
 
     matlab::data::TypedArray<matlab::data::MATLABString> out =
         factory.createArray<matlab::data::MATLABString>({countModules, 1});
-    for (int i = 0; i < countModules; i++)
+    for (DWORD i = 0; i < countModules; i++)
     {
       memset(pFilename, 0, nbytesFilename);
       GetModuleFileNameW(lphModule[i], pFilename, nbytesFilename);
