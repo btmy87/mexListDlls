@@ -12,6 +12,7 @@
 class MexFunction : public matlab::mex::Function
 {
   matlab::data::ArrayFactory factory;
+  const std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
 
 public:
   void operator()(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs)
@@ -23,12 +24,8 @@ public:
     DWORD cb = NMODULE * sizeof(HMODULE);
     BOOL status = EnumProcessModules(hProcess, lphModule,
                                      cb, &lpcbNeeded);
-    const std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
     if (status == 0)
-    {
-      matlabPtr->feval(u"error", 0,
-                       std::vector<matlab::data::Array>({factory.createScalar("EnumProcessModules failed")}));
-    }
+      mexPrintError("EnumProcessModules failed");
 
     DWORD countModules = lpcbNeeded / sizeof(HMODULE);
     char *pFilename;
@@ -46,22 +43,24 @@ public:
       // Assign as MATLAB string using factory.createScalar
       out[i] = sFilename16;
     }
+    free(lphModule);
+    free(pFilename);
 
     outputs[0] = std::move(out);
   }
+
   void checkArguments(matlab::mex::ArgumentList &outputs, matlab::mex::ArgumentList &inputs)
   {
-    const std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
     if (inputs.size() != 0)
-    {
-      matlabPtr->feval(u"error", 0,
-                       std::vector<matlab::data::Array>({factory.createScalar("Expected 0 inputs")}));
-    }
-
+      mexPrintError("Expected 0 inputs");
     if (outputs.size() > 1)
-    {
-      matlabPtr->feval(u"error", 0,
-                       std::vector<matlab::data::Array>({factory.createScalar("Maximum one output supported")}));
-    }
+      mexPrintError("Expected at most 1 output");
+  };
+
+  void mexPrintError(std::string errMsg)
+  {
+    std::string errHeader("Error using mexListDlls:\n");
+    std::vector<matlab::data::Array> msgArray = {factory.createScalar(errHeader + errMsg)};
+    matlabPtr->feval(u"error", 0, msgArray);
   };
 };
