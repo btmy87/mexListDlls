@@ -28,19 +28,17 @@ public:
       mexPrintError("EnumProcessModules failed");
 
     DWORD countModules = lpcbNeeded / sizeof(HMODULE);
-    char *pFilename;
-    pFilename = (char *)calloc(MAX_PATH + 1, sizeof(char));
+    WCHAR *pFilename;
+    SIZE_T nbytesFilename = (MAX_PATH + 1) * sizeof(WCHAR);
+    pFilename = (WCHAR *)calloc(MAX_PATH + 1, sizeof(WCHAR));
 
     matlab::data::TypedArray<matlab::data::MATLABString> out =
         factory.createArray<matlab::data::MATLABString>({countModules, 1});
     for (int i = 0; i < countModules; i++)
     {
-      memset(pFilename, 0, MAX_PATH + 1);
-      GetModuleFileNameA(lphModule[i], pFilename, MAX_PATH + 1);
-      std::string sFilename8 = std::string(pFilename);
-      std::u16string sFilename16(sFilename8.begin(), sFilename8.end());
-
-      // Assign as MATLAB string using factory.createScalar
+      memset(pFilename, 0, nbytesFilename);
+      GetModuleFileNameW(lphModule[i], pFilename, nbytesFilename);
+      std::u16string sFilename16((char16_t *)pFilename);
       out[i] = sFilename16;
     }
     free(lphModule);
